@@ -1,0 +1,22 @@
+STORY ANALYSIS
+
+Parse and Convert to numeric datatypes
+
+Multiple sheet output
+
+Concat DFs as Stores, Concessions, Inno, KS
+
+-------------------------------------------
+
+DSM
+
+Multiple outputs to sheets
+
+Concat DFs as Stores, Concessions, Inno, KS
+
+-------------------------------------------
+
+Stretch
+
+Better data visualization -----------------
+
