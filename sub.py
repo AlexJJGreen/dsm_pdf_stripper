@@ -206,8 +206,26 @@ with pd.ExcelWriter('test.xlsx') as writer:
     collated_dfs.append(solus_data)
     for dfs in collated_dfs:
         collated_df = pd.concat(dfs)
+        collated_df["Sales £"] = collated_df["Sales £"].apply(pd.to_numeric)
+        collated_df["Units"] = collated_df["Units"].apply(pd.to_numeric)
+        collated_df["Cash Mix %"] = collated_df["Sales £"].apply(pd.to_numeric)
+        collated_df["Unit Mix %"] = collated_df["Units"].apply(pd.to_numeric)
         sheetname = collated_df.index.get_level_values(0)[0]
-        collated_df.groupby(level=[1,2])
+        collated_df = collated_df.groupby(level=[1,2]).sum().reset_index()
+        collated_df.set_index(["STORY","Item L3 Desc"], inplace=True)
+        stories = list({df.index.unique(level='STORY'):)
+        stories.remove("Total")
+        for story in stories:
+            try:
+             story = {story: collated_df["Cash Mix %"].loc[(story,"Total")]}
+            except:
+                print(story)
+        for story in stories:
+            try:
+                collated_df["Cash Mix %"].loc[story] = collated_df["Cash Mix %"].loc[story] / story
+                print(collated_df["Cash Mix %"].loc[(story, "Total")])
+            except:
+                print(story)
         collated_df.to_excel(writer, engine='xlsxwriter', sheet_name=sheetname)
 
     
