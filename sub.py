@@ -214,7 +214,13 @@ with pd.ExcelWriter('test.xlsx') as writer:
         collated_df = collated_df.groupby(level=[1,2]).sum().reset_index()
         collated_df.set_index(["STORY","Item L3 Desc"], inplace=True)
         stories = list(collated_df.index.unique(level='STORY'))
-        # stories.remove("Total")
+        collated_df_total = collated_df[collated_df.index.get_level_values("Item L3 Desc") == "Total"]
+        cash_total = collated_df["Sales £"].loc[("Total","Total")]
+        unit_total = collated_df["Units"].loc[("Total","Total")]
+        collated_df_total["Cash Mix %"] = collated_df_total["Cash Mix %"].apply(lambda x: round(float(x / cash_total),3))
+        collated_df_total["Unit Mix %"] = collated_df_total["Unit Mix %"].apply(lambda x: round(float(x / unit_total),3))
+        collated_df_total.sort_values(by=["Cash Mix %"], inplace=True, ascending=False)
+        collated_df_total.to_excel(writer, engine='xlsxwriter', sheet_name=sheetname + "_stories")
 
         totals = []
         unit_totals = []
@@ -239,6 +245,8 @@ with pd.ExcelWriter('test.xlsx') as writer:
                 except:
                     pass
         
+        # collated_df.reindex(collated_df_total.index)
+
         collated_df.to_excel(writer, engine='xlsxwriter', sheet_name=sheetname)
 
     
