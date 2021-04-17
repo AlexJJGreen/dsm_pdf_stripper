@@ -213,19 +213,23 @@ with pd.ExcelWriter('test.xlsx') as writer:
         sheetname = collated_df.index.get_level_values(0)[0]
         collated_df = collated_df.groupby(level=[1,2]).sum().reset_index()
         collated_df.set_index(["STORY","Item L3 Desc"], inplace=True)
-        stories = list({df.index.unique(level='STORY'):)
+        stories = list(collated_df.index.unique(level='STORY'))
         stories.remove("Total")
+
+        totals = []
+
         for story in stories:
-            try:
-             story = {story: collated_df["Cash Mix %"].loc[(story,"Total")]}
-            except:
-                print(story)
-        for story in stories:
-            try:
-                collated_df["Cash Mix %"].loc[story] = collated_df["Cash Mix %"].loc[story] / story
-                print(collated_df["Cash Mix %"].loc[(story, "Total")])
-            except:
-                print(story)
+            totals.append(collated_df["Cash Mix %"].loc[(story,"Total")])
+
+        items = list(collated_df.index.unique(level='Item L3 Desc'))
+        
+        for s,t in zip(stories,totals):
+            for item in items:
+                try:
+                    collated_df["Cash Mix %"].loc[(s,item)] = round(float(collated_df["Cash Mix %"].loc[(s,item)] / t),2)
+                except:
+                    pass
+        
         collated_df.to_excel(writer, engine='xlsxwriter', sheet_name=sheetname)
 
     
