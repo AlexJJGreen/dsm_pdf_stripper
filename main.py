@@ -68,9 +68,30 @@ for page in range(15):
 
 concatenated = pd.concat(df_list)
 
-filter_df = concatenated.loc["Berlin (Karstadt)"]
+concatenated.index = concatenated.index.astype('str')
+cols = concatenated.columns.drop("day")
+concatenated[cols] = concatenated[cols].apply(pd.to_numeric, errors='coerce')
 
-print(filter_df)
+ks_data = concatenated[concatenated.index.str.contains("Karstadt")].groupby("day").sum()
+ks_data.to_excel("grouped.xlsx")
+#inno_data = []
+#solus_data = []
+
+#for i in concatenated.index:
+#    if "(Karstadt)" in concatenated.index:
+#        ks_data.append(i)
+#    if "(Inno)" in concatenated.index:
+#        inno_data.append(i)
+#    else:
+#        solus_data.append(i)
+
+print(ks_data)
+#print(inno_data)
+#print(solus_data)
+
+#filter_df = concatenated.loc["Berlin (Karstadt)"]
+
+#print(filter_df)
 
 #filter_df.to_excel("berlin.xlsx")
 
@@ -83,3 +104,7 @@ print(filter_df)
 #df_T.to_excel("output_2.xlsx")
 
 # shutil.move("output") <-- move file to folder
+
+#Sales Act £'k	Sales Bud £'k	Sales LW	Sales LY £'k	v Bud %	v LW %	v LY %	Margin %	v LY %Pts	Returns Act £'k	Returns v LY%
+
+#Sunday Monday Tuesday Wednesday Thursday Friday Saturday

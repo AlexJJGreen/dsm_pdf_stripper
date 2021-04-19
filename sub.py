@@ -66,8 +66,8 @@ for page in range(total_pages):
             
             # parse Sales £, Units, Cash Mix %, Unit Mix % to float
             story_datasets["Sales £"] = parse_to_numeric(story_datasets["Sales £"])
-            story_datasets["Cash Mix %"] = parse_to_numeric(story_datasets["Cash Mix %"])
-            story_datasets["Unit Mix %"] = parse_to_numeric(story_datasets["Unit Mix %"])
+            story_datasets["Cash Mix %"] = parse_to_numeric(story_datasets["Cash Mix %"]) / 100
+            story_datasets["Unit Mix %"] = parse_to_numeric(story_datasets["Unit Mix %"]) / 100
             store_datasets.append(story_datasets)
         except:
             pass
