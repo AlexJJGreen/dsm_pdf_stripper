@@ -50,9 +50,10 @@ for page in range(total_pages):
     
     # check page type
     if raw_text[0] == "STORY ANALYSIS YESTERDAY":
+        #print("triggered")
         wtd = False
 
-        # check for 'dead' datasets
+        # print(story_datasets)
         try:
             story_datasets["STORY"] = list(OrderedSet(story_datasets["STORY"]))
 
@@ -66,10 +67,19 @@ for page in range(total_pages):
             
             # parse Sales £, Units, Cash Mix %, Unit Mix % to float
             story_datasets["Sales £"] = parse_to_numeric(story_datasets["Sales £"])
-            story_datasets["Cash Mix %"] = parse_to_numeric(story_datasets["Cash Mix %"]) / 100
-            story_datasets["Unit Mix %"] = parse_to_numeric(story_datasets["Unit Mix %"]) / 100
+            story_datasets["Cash Mix %"] = parse_to_numeric(story_datasets["Cash Mix %"])
+            #print(story_datasets["Cash Mix %"])
+            for i in story_datasets["Cash Mix %"]:
+                if (i != None) or (i != "Total"):
+                    i = float(i) / 100
+            story_datasets["Unit Mix %"] = parse_to_numeric(story_datasets["Unit Mix %"])
+            for i in story_datasets["Unit Mix %"]:
+                if (i != None) or (i != "Total"):
+                    i = float(i) / 100
             store_datasets.append(story_datasets)
+        #print(store_datasets)
         except:
+        #    print("passed")
             pass
 
         story_datasets = {}
@@ -169,7 +179,7 @@ for page in range(total_pages):
         pass
 
 # datasets to df -> to excel
-with pd.ExcelWriter('test.xlsx') as writer:
+with pd.ExcelWriter('stor_analysis.xlsx') as writer:
     for dataset in store_datasets:
         sheetname = dataset["store"][0]
         df = pd.DataFrame.from_dict(dataset)
@@ -200,6 +210,7 @@ with pd.ExcelWriter('test.xlsx') as writer:
             df.set_index(["Grouping", "STORY", "Item L3 Desc"], inplace=True)
             solus_data.append(df)
     
+    # print(ks_data)
     collated_dfs = []
     collated_dfs.append(ks_data)
     collated_dfs.append(inno_data)
@@ -216,7 +227,9 @@ with pd.ExcelWriter('test.xlsx') as writer:
         stories = list(collated_df.index.unique(level='STORY'))
         collated_df_total = collated_df[collated_df.index.get_level_values("Item L3 Desc") == "Total"]
         cash_total = collated_df["Sales £"].loc[("Total","Total")]
+        print(cash_total)
         unit_total = collated_df["Units"].loc[("Total","Total")]
+        print(collated_df_total["Cash Mix %"])
         collated_df_total["Cash Mix %"] = collated_df_total["Cash Mix %"].apply(lambda x: round(float(x / cash_total),3))
         collated_df_total["Unit Mix %"] = collated_df_total["Unit Mix %"].apply(lambda x: round(float(x / unit_total),3))
         collated_df_total.sort_values(by=["Cash Mix %"], inplace=True, ascending=False)

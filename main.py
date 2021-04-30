@@ -2,14 +2,16 @@ import PyPDF2 as pp
 import csv
 import pandas as pd
 import shutil
+from ordered_set import OrderedSet
+import xlsxwriter
+from re import search
 
-doc = pp.PdfFileReader("International DSM.pdf")
+doc = pp.PdfFileReader("International DSM (2).pdf")
 
 total_pages = doc.getNumPages()
 
 #get meta -- wk ---
 page_0 = doc.getPage(0).extractText()
-print(page_0)
 
 #list for df outputs
 df_list = []
@@ -66,14 +68,41 @@ for page in range(15):
         #df_T = df.T
         df_list.append(df)
 
+#concat into single df
 concatenated = pd.concat(df_list)
-
 concatenated.index = concatenated.index.astype('str')
 cols = concatenated.columns.drop("day")
 concatenated[cols] = concatenated[cols].apply(pd.to_numeric, errors='coerce')
+locations = OrderedSet(concatenated.index)
 
-ks_data = concatenated[concatenated.index.str.contains("Karstadt")].groupby("day").sum()
-ks_data.to_excel("grouped.xlsx")
+with pd.ExcelWriter('sales.xlsx') as writer:
+    for location in locations:
+        filter_df = concatenated.loc[location]
+        filter_df.index = filter_df["day"]
+        if location != "Total":
+            filter_df.to_excel(writer, engine='xlsxwriter', sheet_name=location)
+
+        ks_data = concatenated[concatenated.index.str.contains("Karstadt")].groupby("day").sum()
+        inno_data = concatenated[concatenated.index.str.contains("Inno") | concatenated.index.str.contains("INNO")].groupby("day").sum()
+        solus_data = concatenated[(concatenated.index.str.contains("Inno") == False) & (concatenated.index.str.contains("Karstadt") == False) & (concatenated.index.str.contains("Total") == False)].groupby("day").sum()
+
+        def df_calc(sheetname, df, loc_count):
+            # df.loc["Total"]
+            df["v Bud %"] = (df["Sales Act £'k"] / df["Sales Bud £'k"]) - 1
+            df["v LW %"] = (df["Sales Act £'k"] / df["Sales LW"]) - 1
+            df["v LY %"] = (df["Sales Act £'k"] / df["Sales LY £'k"]) - 1
+            df["Margin %"] = df["Margin %"] / loc_count
+            df.reindex(["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"])
+            df.to_excel(writer, engine=xlsxwriter, sheet_name=sheetname)
+
+        df_calc("Karstadt", ks_data, 10)
+        df_calc("Inno", inno_data, 9)
+        df_calc("Solus", solus_data, 9)
+
+
+# Sales LY £'k	v Bud %	v LW %	v LY %	Margin %	v LY %Pts	Returns Act £'k	Returns v LY%
+
+
 #inno_data = []
 #solus_data = []
 
@@ -85,7 +114,7 @@ ks_data.to_excel("grouped.xlsx")
 #    else:
 #        solus_data.append(i)
 
-print(ks_data)
+#print(ks_data)
 #print(inno_data)
 #print(solus_data)
 
